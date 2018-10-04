@@ -36,12 +36,12 @@ class Perceptron:
         self.perceptron()
 
     def embaralhar(self):
-        self.df = self.df.sample(frac=1)
+        self.df = self.df.sample(frac=1)  #embaralha o dataframe
 
     def separar_entrada_saida(self):
-        self.entrada = pd.DataFrame(self.df[self.df.columns[-self.A:]].values)
-        self.saida = self.df[self.df.columns[0]]
-        self.saida = pd.DataFrame(self.saida.apply(self.transformar).values.tolist())
+        self.entrada = pd.DataFrame(self.df[self.df.columns[-self.A:]].values) #entradas
+        self.saida = self.df[self.df.columns[0]] #saidas
+        self.saida = pd.DataFrame(self.saida.apply(self.transformar).values.tolist()) #saidas transformadas e ordenadas
 
     def transformar(self, df):
         if (df == 1):
@@ -53,23 +53,21 @@ class Perceptron:
         if (df == 3):
             return [0, 0, 1]
 
-    def normalizar(self):
-        pass
 
     def separar_conjuntos(self):
-        tam = len(self.entrada)
-        length_slice = int(round(tam / 3))
-        self.T = length_slice #Numero de itens para teste
-        self.M = tam - length_slice #Numero de itens para treinamento
+        tam = len(self.entrada) #177
+        length_slice = int(round(tam / 3))  #entrada / 3 = 59
+        self.T = length_slice #Numero de itens para teste 59
+        self.M = tam - length_slice #Numero de itens para treinamento 177-59
         print("Items: ")
         print("   Teste: " + str(self.T))
         print("   Treino: " + str(self.M))
 
-        self.conjunto_teste_entrada = self.entrada[:length_slice]
-        self.conjunto_teste_saida = self.saida[:length_slice]
+        self.conjunto_teste_entrada = self.entrada[:length_slice]  #primeiros length_slice da entrada
+        self.conjunto_teste_saida = self.saida[:length_slice]  #primeiros length_slice da saida
         
-        self.conjunto_treino_entrada = self.entrada[length_slice:]
-        self.conjunto_treino_saida = self.saida[length_slice:]
+        self.conjunto_treino_entrada = self.entrada[length_slice:] #ultimos length_slice da entrada
+        self.conjunto_treino_saida = self.saida[length_slice:] #ultimos length_slice da entrada
 
     def degrau(self, df):
         if (df >= 0):
@@ -77,12 +75,13 @@ class Perceptron:
         return 0
 
     def perceptron(self):
+        #import pdb; pdb.set_trace()
         max_it = 200
         t = 0  # Iteracao (Epoca)
-        b = np.zeros(self.N)  # Bias
-        W = pd.DataFrame(np.zeros((self.N, self.A)))
-        y = pd.DataFrame(np.zeros(self.N))
-        e = pd.DataFrame(np.zeros(self.N))
+        b = np.zeros(self.N)  # Bias  vetor vazio com N zeros
+        W = pd.DataFrame(np.zeros((self.N, self.A))) # dataframe N-A preenchidos com 0
+        y = pd.DataFrame(np.zeros(self.N))  #N zeros
+        e = pd.DataFrame(np.zeros(self.N))  #N zeros
         d = self.conjunto_treino_saida
         E = pd.DataFrame(np.zeros(max_it))
         alfa = 0.3
@@ -91,7 +90,7 @@ class Perceptron:
         while (t < max_it):    
             for i in range(self.M):
                 y = W.dot(self.conjunto_treino_entrada.iloc[i]).add(b).apply(self.degrau)
-                e = d.iloc[i].subtract(y)
+                e = d.iloc[i].subtract(y) # determinando erro
                 E.iloc[t] += e.dot(e.T)
                 update = e.values.reshape(self.N,1).dot(self.conjunto_treino_entrada.iloc[[i]]) * alfa
                 W = W + update
