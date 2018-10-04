@@ -1,6 +1,9 @@
 #https://gist.github.com/Geoyi/d9fab4f609e9f75941946be45000632b
 #sudo apt-get install python3-pip
 #sudo pip install virtualenv 
+#source venv/bin/activate
+
+#se nao der:
 #virtualenv -p /usr/bin/python3 venv
 #source venv/bin/activate
 #pip install pandas
