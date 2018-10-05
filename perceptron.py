@@ -1,76 +1,50 @@
-#https://gist.github.com/Geoyi/d9fab4f609e9f75941946be45000632b
-#sudo apt-get install python3-pip
-#sudo pip install virtualenv 
 #source venv/bin/activate
 
-#se nao der:
-#virtualenv -p /usr/bin/python3 venv
-#source venv/bin/activate
-#pip install pandas
-#pip install numpy
-#pip install matplotlib
 import pandas as pd
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 class Perceptron:
     def __init__(self, file_name, N):
         self.df = pd.read_csv(file_name, header=None)
-        self.A =  len(self.df.columns) - 1 # Atributos
-        self.N = N # Neuronios
-        #self.M = len(self.df)
-        #print("Tabela completa: ")
-        #print(self.df)
-        #print("Tabela embaralhada: ")
+        self.A =  len(self.df.columns) - 1
+        self.N = N
         self.embaralhar()
-        #print(self.df)
-        #print("Separar saida da entrada: ")
         self.separar_entrada_saida()
-        #print(self.entrada)
-        #print(self.saida)
-        #print("Separar conjunto de teste e conjunto de treino")
         self.separar_conjuntos()
-        #print("Teste:")
-        #print(self.conjunto_teste_entrada)
-        #print(self.conjunto_teste_saida)
-        #print("Treino:")
-        #print(self.conjunto_treino_entrada)
-        #print(self.conjunto_treino_saida)
         self.perceptron()
 
     def embaralhar(self):
-        self.df = self.df.sample(frac=1)  #embaralha o dataframe
+        self.df = self.df.sample(frac=1)
 
     def separar_entrada_saida(self):
-        self.entrada = pd.DataFrame(self.df[self.df.columns[-self.A:]].values) #entradas
-        self.saida = self.df[self.df.columns[0]] #saidas
-        self.saida = pd.DataFrame(self.saida.apply(self.transformar).values.tolist()) #saidas transformadas e ordenadas
+        self.entrada = pd.DataFrame(self.df[self.df.columns[-self.A:]].values)
+        self.saida = self.df[self.df.columns[0]]
+        self.saida = pd.DataFrame(self.saida.apply(self.transformar).values.tolist())
 
     def transformar(self, df):
-        if (df == 1):
-            return [1, 0, 0]
+        if (df == 3):
+            return [0, 0, 1]
 
         if (df == 2):
             return [0, 1, 0]
 
-        if (df == 3):
-            return [0, 0, 1]
-
+        if (df == 1):
+            return [1, 0, 0]
 
     def separar_conjuntos(self):
-        tam = len(self.entrada) #177
-        length_slice = int(round(tam / 3))  #entrada / 3 = 59
-        self.T = length_slice #Numero de itens para teste 59
-        self.M = tam - length_slice #Numero de itens para treinamento 177-59
-        print("Items: ")
-        print("   Teste: " + str(self.T))
-        print("   Treino: " + str(self.M))
+        tam = len(self.entrada)
+        teste = int(round(tam / 3))
+        self.T = teste
+        self.M = tam - teste
+        print('Test->' + str(self.T))
+        print('Train->' + str(self.M))
 
-        self.conjunto_teste_entrada = self.entrada[:length_slice]  #primeiros length_slice da entrada
-        self.conjunto_teste_saida = self.saida[:length_slice]  #primeiros length_slice da saida
-        
-        self.conjunto_treino_entrada = self.entrada[length_slice:] #ultimos length_slice da entrada
-        self.conjunto_treino_saida = self.saida[length_slice:] #ultimos length_slice da entrada
+        self.conjunto_teste_entrada = self.entrada[:teste]
+        self.conjunto_teste_saida = self.saida[:teste]
+
+        self.conjunto_treino_entrada = self.entrada[teste:]
+        self.conjunto_treino_saida = self.saida[teste:]
 
     def degrau(self, df):
         if (df >= 0):
@@ -79,36 +53,35 @@ class Perceptron:
 
     def perceptron(self):
         #import pdb; pdb.set_trace()
-        max_it = 200
-        t = 0  # Iteracao (Epoca)
-        b = np.zeros(self.N)  # Bias  vetor vazio com N zeros
-        W = pd.DataFrame(np.zeros((self.N, self.A))) # dataframe N-A preenchidos com 0
-        y = pd.DataFrame(np.zeros(self.N))  #N zeros
-        e = pd.DataFrame(np.zeros(self.N))  #N zeros
+        t = 0
+        iteracoes = 250
+        alpha = 0.3
+        corretos = 0
+        b = np.zeros(self.N)
+        W = pd.DataFrame(np.zeros((self.N, self.A)))
+        y = pd.DataFrame(np.zeros(self.N))
+        e = pd.DataFrame(np.zeros(self.N))
         d = self.conjunto_treino_saida
-        E = pd.DataFrame(np.zeros(max_it))
-        alfa = 0.3
-        corretos = 0       
+        E = pd.DataFrame(np.zeros(iteracoes))
 
-        while (t < max_it):    
+        while (t < iteracoes):
             for i in range(self.M):
                 y = W.dot(self.conjunto_treino_entrada.iloc[i]).add(b).apply(self.degrau)
-                e = d.iloc[i].subtract(y) # determinando erro
+                e = d.iloc[i].subtract(y)
                 E.iloc[t] += e.dot(e.T)
-                update = e.values.reshape(self.N,1).dot(self.conjunto_treino_entrada.iloc[[i]]) * alfa
+                update = e.values.reshape(self.N,1).dot(self.conjunto_treino_entrada.iloc[[i]]) * alpha
                 W = W + update
-                b = b + alfa * e
-                #print(b)
+                b = b + alpha * e
 
             t += 1
-                
+
         for i in range(self.T):
             y = W.dot(self.conjunto_teste_entrada.iloc[i]).add(b).apply(self.degrau)
             if y.equals(self.conjunto_teste_saida.iloc[i]):
                 corretos += 1
 
-        print("Corretude: " + str((float(corretos)/self.T)*100))
-                    
+        print('Accuracy-> {}%'.format(str((float(corretos)/self.T)*100)))
+        plt.plot(E)
+        plt.show()
 
-p = Perceptron('wine.data', 3)
-
+p = Perceptron('iris.data', 3)
